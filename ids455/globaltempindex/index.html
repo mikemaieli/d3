@@ -1,99 +1,193 @@
-<!DOCTYPE html>
-<style>
+<!doctype html>
+<html>
+  <head>
+    <script src="d3.v4.min.js"></script>
+  <style>
+    path.domain {
+      stroke: none;
+    }
+    .tick > line {
+      stroke: #EDF2F4;
+    }
+    .tick > text {
+      fill: #8D99AE;
+      font-size: 14px;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 4px;
+      font-family: sans-serif;
+    }
 
-.axis .domain {
-  display: none;
-}
+    p {
+      font-size: 12px;
+      margin-top: 0px;
+      margin-bottom: 8px;
+      font-family: sans-serif;
+    }
+  </style>
+  </head>
+  <body>
+    <div style="width:700px;">
+        <h1>Global Land-Ocean Temperature Index, 1880 to 2017</h1>
+        <p>The world is heating up. The Land-Ocean Temperature Index (LOTI) provides a measure of the overall world temperature changes which takes into account both land and water temperatures. LOTI, measured by NASA, provides us with insight into overall temperature changes on earth. The line chart plots out the average LOTI for each year relative to the base period of 1951-1980. The red line reflects the average LOTI for each year, and the grey area shows the LOTI range for each year.</p>
+    </div>  
+    <div id="viz">
+      <svg style="width:700px;height:520px;" ></svg>
+    </div>
+    <script>
+                  
+      d3.csv("globaltempindex.csv", lineChart);
+      
+      function lineChart(data) {
+        
+        //define axis
+        var xScale = d3.scaleLinear().domain([1880,2017]).range([40,660]);
+        var yScale = d3.scaleLinear().domain([-1.1,1.2]).range([480,20]);
+        
+        //draw x axis
+        var xAxis = d3.axisBottom()
+          .scale(xScale)
+          .tickSize(480)
+          .tickValues([1880,1900,1920,1940,1960,1980,2000,2020])
+          .tickFormat(d3.format("d"));
+        
+        d3.select("svg")
+            .append("g")
+            .attr("id", "xAxisG")
+            .call(xAxis);
+        
+        //label x axis  
+        d3.select("svg")
+            .append("text")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "14px")
+            .attr("fill", "#8D99AE")
+            .attr("transform", "translate(" + (58) + " ," + (472) + ")")
+            .style("text-anchor", "middle")
+            .text("year");
+        
+        //draw y axis        
+        var yAxis = d3.axisLeft()
+          .scale(yScale)
+          .ticks(3)
+          .tickSize(680);
+        
+        d3.select("svg")
+            .append("g")
+            .attr("id", "yAxisG")
+            .attr("transform","translate(700,0)")
+            .call(yAxis);
+        
+        //label y axis
+        d3.select("svg")
+            .append("text")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "14px")
+            .attr("fill", "#8D99AE")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 21)
+            .attr("x", -410)
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .text("degrees celcius");
 
-</style>
-<svg width="960" height="960"></svg>
-<script src="https://d3js.org/d3.v4.min.js"></script>
-<script>
+        //define lines
+        var averageLine = d3.line()
+          .x(d => xScale(d.year))
+          .y(d => yScale(d.average));
+        
+        var maxLine = d3.line()
+          .x(d => xScale(d.year))
+          .y(d => yScale(d.max));
+        
+        var minLine = d3.line()
+          .x(d => xScale(d.year))
+          .y(d => yScale(d.min));
+        
+        //define fill between max and min  
+        var area = d3.area()
+          .x(d => xScale(d.year))
+          .y0(d => yScale(d.min))
+          .y1(d => yScale(d.max));           
+        
+        //draw fill between max and min
+        d3.select("svg")
+          .append("path")
+            .attr("d", area(data))
+            .attr("fill", "#D9D7DD7F")
+        
+        //draw lines
+        d3.select("svg")
+          .append("path")
+            .attr("d", maxLine(data))
+            .attr("fill", "none")
+            .attr("stroke", "#D9D7DD")
+            .attr("stroke-width", 2);
+        
+        d3.select("svg")
+          .append("path")
+            .attr("d", minLine(data))
+            .attr("fill", "none")
+            .attr("stroke", "#D9D7DD")
+            .attr("stroke-width", 2); 
+  
+        d3.select("svg")
+          .append("path")
+            .attr("d", averageLine(data))
+            .attr("fill", "none")
+            .attr("stroke", "#e50000")
+            .attr("stroke-width", 3);
 
-var svg = d3.select("svg"),
-    margin = {top: 20, right: 20, bottom: 30, left: 40},
-    width = +svg.attr("width") - margin.left - margin.right,
-    height = +svg.attr("height") - margin.top - margin.bottom,
-    g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        //draw annotations
+        d3.select("svg")
+          .append("circle")
+            .attr("cx", 308)
+            .attr("cy", 260)
+            .attr("r", 7)
+            .attr("fill", "#000000");
+        
+        d3.select("svg")
+          .append("text")
+            .attr("x", 490)
+            .attr("y", 265)
+            .attr("font-size", "12px")
+            .attr("font-family", "sans-serif")
+            .text("Beginning of the rise");
+        
+        d3.select("svg")
+          .append("text")
+            .attr("x", 472)
+            .attr("y", 65)
+            .attr("font-size", "12px")
+            .attr("font-family", "sans-serif")
+            .text("Highest LOTI recorded in history");
 
-var y = d3.scaleBand()			// x = d3.scaleBand()	
-    .rangeRound([0, height])	// .rangeRound([0, width])
-    .paddingInner(0.05)
-    .align(0.1);
+        d3.select("svg")
+          .append("text")
+            .attr("x", 190)
+            .attr("y", 260)
+            .attr("font-size", "12px")
+            .attr("font-family", "sans-serif")
+            .text("Beginning of plateau");
 
-var x = d3.scaleLinear()		// y = d3.scaleLinear()
-    .rangeRound([0, width]);	// .rangeRound([height, 0]);
+        d3.select("svg")
+          .append("circle")
+            .attr("cx", 476)
+            .attr("cy", 260)
+            .attr("r", 7);
 
-var z = d3.scaleOrdinal()
-    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
-
-d3.csv("https://raw.githubusercontent.com/mikemaieli/d3/master/ids455/globaltempindex/globaltempindex.csv", function(d, i, columns) {
-  for (i = 1, t = 0; i < columns.length; ++i) t += d[columns[i]] = +d[columns[i]];
-  d.total = t;
-  return d;
-}, function(error, data) {
-  if (error) throw error;
-
-  var keys = data.columns.slice(1);
-
-  data.sort(function(a, b) { return b.total - a.total; });
-  y.domain(data.map(function(d) { return d.State; }));					// x.domain...
-  x.domain([0, d3.max(data, function(d) { return d.total; })]).nice();	// y.domain...
-  z.domain(keys);
-
-  g.append("g")
-    .selectAll("g")
-    .data(d3.stack().keys(keys)(data))
-    .enter().append("g")
-      .attr("fill", function(d) { return z(d.key); })
-    .selectAll("rect")
-    .data(function(d) { return d; })
-    .enter().append("rect")
-      .attr("y", function(d) { return y(d.data.State); })	    //.attr("x", function(d) { return x(d.data.State); })
-      .attr("x", function(d) { return x(d[0]); })			    //.attr("y", function(d) { return y(d[1]); })	
-      .attr("width", function(d) { return x(d[1]) - x(d[0]); })	//.attr("height", function(d) { return y(d[0]) - y(d[1]); })
-      .attr("height", y.bandwidth());						    //.attr("width", x.bandwidth());	
-
-  g.append("g")
-      .attr("class", "axis")
-      .attr("transform", "translate(0,0)") 						//  .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisLeft(y));									//   .call(d3.axisBottom(x));
-
-  g.append("g")
-      .attr("class", "axis")
-	  .attr("transform", "translate(0,"+height+")")				// New line
-      .call(d3.axisBottom(x).ticks(null, "s"))					//  .call(d3.axisLeft(y).ticks(null, "s"))
-    .append("text")
-      .attr("y", 2)												//     .attr("y", 2)
-      .attr("x", x(x.ticks().pop()) + 0.5) 						//     .attr("y", y(y.ticks().pop()) + 0.5)
-      .attr("dy", "0.32em")										//     .attr("dy", "0.32em")
-      .attr("fill", "#000")
-      .attr("font-weight", "bold")
-      .attr("text-anchor", "start")
-      .text("Population")
-	  .attr("transform", "translate("+ (-width) +",-10)");   	// Newline
-
-  var legend = g.append("g")
-      .attr("font-family", "sans-serif")
-      .attr("font-size", 10)
-      .attr("text-anchor", "end")
-    .selectAll("g")
-    .data(keys.slice().reverse())
-    .enter().append("g")
-    //.attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
-	 .attr("transform", function(d, i) { return "translate(-50," + (300 + i * 20) + ")"; });
-
-  legend.append("rect")
-      .attr("x", width - 19)
-      .attr("width", 19)
-      .attr("height", 19)
-      .attr("fill", z);
-
-  legend.append("text")
-      .attr("x", width - 24)
-      .attr("y", 9.5)
-      .attr("dy", "0.32em")
-      .text(function(d) { return d; });
-});
-
-</script>
+        d3.select("svg")
+          .append("circle")
+            .attr("cx", 655)
+            .attr("cy", 63)
+            .attr("r", 7);     
+        }
+    </script>
+    <div><p>Visualization by Mike Maieli for IDS-455.<br>
+        Adapted from figure 4.18 from Elijah Meek's <i>D3.js in Action</i>.<br>
+        Data from https://data.giss.nasa.gov/gistemp/.</p>
+    </div>
+  </body>
+</html>
