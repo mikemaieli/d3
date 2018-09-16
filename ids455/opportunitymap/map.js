@@ -24,7 +24,7 @@ var legendText = ["Low", "", "", "", "High"];
 var legendColors = ['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15'];	
 
 d3.json("https://raw.githubusercontent.com/mikemaieli/d3/master/ids455/opportunitymap/us.json", function (error, us) {
-	d3.csv("data.csv", function (error, data) {
+	d3.csv("https://raw.githubusercontent.com/mikemaieli/d3/master/ids455/opportunitymap/data.csv", function (error, data) {
 		var indicator = document.getElementById("varmenu").value;
 		varName = "Unemployment rate";
 		var countyById = {};
